@@ -1,0 +1,14 @@
+{
+  "name": "home-automation-hub",
+  "version": "1.0.0",
+  "description": "Code for hub",
+  "main": "index.js",
+  "author": "ShocKwav3_",
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^4.1.1",
+    "johnny-five": "^2.0.0",
+    "particle-io": "^0.15.0",
+    "socket.io-client": "^2.3.0"
+  }
+}
