@@ -2,13 +2,23 @@
   "name": "home-automation-hub",
   "version": "1.0.0",
   "description": "Code for hub",
-  "main": "index.js",
+  "main": "main.js",
   "author": "ShocKwav3_",
   "license": "MIT",
+  "scripts":{
+    "deviceManagement": "node main.js"
+  },
   "dependencies": {
     "debug": "^4.1.1",
     "johnny-five": "^2.0.0",
     "particle-io": "^0.15.0",
-    "socket.io-client": "^2.3.0"
+    "socket.io-client": "^2.3.0",
+    "axios": "^0.20.0",
+    "chalk": "^4.1.0",
+    "cli-progress": "^3.8.2",
+    "cli-table3": "^0.6.0",
+    "clui": "^0.3.6",
+    "inquirer": "^7.3.3",
+    "lodash": "^4.17.20"
   }
 }

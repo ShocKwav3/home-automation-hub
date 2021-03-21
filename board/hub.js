@@ -6,7 +6,7 @@ var { workerLogger } = require('../helpers/logHelpers');
 
 const deviceId = process.argv.slice(2)[0];
 const token = process.argv.slice(2)[1]; //FIXME: encryption needed
-const hubProfile = process.argv.slice(2)[2];(deviceId);
+const hubProfile = process.argv.slice(2)[2];
 const deviceLogger = workerLogger(deviceId);
 
 var board = new five.Board({
