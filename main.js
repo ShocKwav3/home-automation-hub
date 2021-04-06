@@ -1,11 +1,15 @@
 const _ = require('lodash');
+const figlet = require('figlet');
+const chalk = require('chalk');
 
 const messages = require('./helpers/messageHelpers');
 const cliServices = require('./services/cliServices');
 const boardHelpers = require('./helpers/boardHelpers');
 const { apiServiceInstance } = require('./services/apiServices');
-const axios = require('axios')
+const { logger, getProgramLogger, logStylers } = require('./helpers/logHelpers');
 
+
+logger(figlet.textSync('PAKAI !'))
 
 messages.sayWelcome();
 messages.sayLoginMessage();
@@ -17,56 +21,99 @@ const boardProgressBar = cliServices.getProgressBar('Boards');
 
 async function startLoginProcess () {
     try {
+        const programLogger = getProgramLogger('resolveAllBoards');
         const credentials = await cliServices.getLoginCredentials();
         const userDetails = await apiServiceInstance().post('/v1/users/login', {user_email: credentials.useremail, password: credentials.password});
 
+        programLogger(`${logStylers.genericSuccess('Login successful!')} Welcome ${logStylers.values(userDetails.data.data.name)}`);
         resolveAllBoards(userDetails.data.data);
     } catch (error) {
-        console.log('=====>', error.message, error.stack);
-        const userChoice = await cliServices.loginTryAgain();
+        const userChoice = await cliServices.tryAgain('Login', error.message);
 
         if (userChoice.retryLogin) {
             startLoginProcess();
         } else {
-            console.log('Exiting...');
+            logger('Exiting...');
             process.exit(1);
         }
     }
 }
 
 async function resolveAllBoards(userDetail) {
-    spinner.message('Fetching registered boards from server');
+    spinner.message(`Fetching your registered boards from server, ${userDetail.name}`);
     spinner.start();
 
-    const boardListFromServer = await apiServiceInstance(userDetail.token).get('/v1/boards');
+    const programLogger = getProgramLogger('resolveAllBoards');
 
-    spinner.stop();
+    try {
+        const boardListFromServer = await apiServiceInstance(userDetail.token).get('/v1/boards');
 
-    showBoardsList(userDetail, boardListFromServer.data.data);
+        spinner.stop();
+
+        programLogger(logStylers.genericSuccess(`Boards fetched successfully. ${logStylers.basicText('Boards found:')} ${logStylers.values(boardListFromServer.data.data.length)}`))
+
+        showBoardsList(userDetail, boardListFromServer.data.data);
+    } catch (error) {
+        const userChoice = await cliServices.tryAgain('Boards fetch', error.message);
+
+        if (userChoice.retryLogin) {
+            resolveAllBoards(userDetail);
+        } else {
+            logger('Exiting...');
+            process.exit(1);
+        }
+    }
 }
 
 async function showBoardsList (userDetail, boardListFromServer) {
-    spinner.message('Getting boards: connected and disconnected for both registered and unregistered');
+    const programLogger = getProgramLogger('showBoardsList');
+
+    spinner.message('Fetching board list: From particle cli list');
     spinner.start();
 
-    const boardListFromCli = await cliServices.getCliData('particle list | grep -i photon');
-    const boardListFromCliParsed = cliServices.parseCliData(boardListFromCli.stdout, boardDataSanitizers);
-    const boardListFromCliFormatted = boardHelpers.formatBoardData(boardListFromCliParsed);
-    const boardList = boardHelpers.prepareBoardList(boardListFromServer, boardListFromCliFormatted);
-    spinner.stop();
+    let boardListFromCliFormatted = [];
 
+    try {
+        const boardListFromCli = await cliServices.getCliData('particle list | grep -i photon');
+        const boardListFromCliParsed = cliServices.parseCliData(boardListFromCli.stdout, boardDataSanitizers);
+        boardListFromCliFormatted = boardHelpers.formatBoardData(boardListFromCliParsed);
+
+        spinner.stop();
+    } catch (error) {
+        spinner.stop();
+
+        if(error.message.includes('Command failed')) {
+            programLogger(`Fetching failed: Particle devices\n  => ${logStylers.genericWarning('Check whether you are logged in to particle cli')}`, true);
+        } else {
+            programLogger(`Fetching failed: Particle devices\n  # ${logStylers.genericError(`Message: ${error.message}`)}`);
+        }
+    }
+
+    const boardList = boardHelpers.prepareBoardList(boardListFromServer, boardListFromCliFormatted);
     const boardListTable = cliServices.initializeTable(boardHelpers.boardsTableHeader);
+
     _.forEach(boardList, (board) => {
+        const boardData = {...board};
+        boardData.state = board.state === 'offline' ? chalk.red(board.state) : chalk.green(board.state);
+        boardData.isRegistered = !board.isRegistered ? chalk.red(board.isRegistered) : chalk.green(board.isRegistered);
+
         boardListTable.push([
-            board.boardName,
-            board.boardId,
-            board.connectionStatus,
-            board.isRegistered,
+            boardData.boardName,
+            boardData.boardId,
+            boardData.state,
+            boardData.isRegistered,
         ]);
     });
-    console.log(boardListTable.toString());
 
-    showOptionsPicker(userDetail, boardList);
+    if (boardList.length < 1) {
+        programLogger(`${logStylers.genericError('Seems like you do not have any board registered to particle system')}\nCheck the following:\n  => ${logStylers.genericWarning('If you are properly logged in to particle system. Run "particle login" to complete login')}\n  => ${logStylers.genericWarning('Your devices are registered to particle system')}`, true);
+
+        process.exit(1);
+    }
+
+    console.log(boardListTable.toString())
+
+    //showOptionsPicker(userDetail, boardList);
 }
 
 async function showOptionsPicker(userDetail, boardList) {

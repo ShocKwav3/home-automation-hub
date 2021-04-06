@@ -66,12 +66,12 @@ const getLoginCredentials = () => {
     ]);
 }
 
-const loginTryAgain = () => {
+const tryAgain = (context, message) => {
     return inquirer.prompt([
         {
             name: "retryLogin",
             type: "confirm",
-            message: "Login was failed. Would you like to retry?",
+            message: `${context} failed. Message: ${message}\n  Would you like to retry?`,
         }
     ]);
 }
@@ -122,7 +122,7 @@ module.exports = {
     getProgressBar,
     initializeTable,
     getLoginCredentials,
-    loginTryAgain,
+    tryAgain,
     optionsPicker,
     boardSelection,
     userTokenInput,
