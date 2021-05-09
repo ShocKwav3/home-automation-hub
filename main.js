@@ -5,7 +5,7 @@ const chalk = require('chalk');
 const messages = require('./helpers/messageHelpers');
 const cliServices = require('./services/cliServices');
 const boardHelpers = require('./helpers/boardHelpers');
-const { apiServiceInstance } = require('./services/apiServices');
+const { getApiServiceInstance } = require('./services/apiServices');
 const { logger, getProgramLogger, logStylers } = require('./helpers/logHelpers');
 
 
@@ -23,14 +23,14 @@ async function startLoginProcess () {
     try {
         const programLogger = getProgramLogger('resolveAllBoards');
         const credentials = await cliServices.getLoginCredentials();
-        const userDetails = await apiServiceInstance().post('/v1/users/login', {user_email: credentials.useremail, password: credentials.password});
+        const userDetails = await getApiServiceInstance('v1').post('/users/login', {user_email: credentials.useremail, password: credentials.password});
 
         programLogger(`${logStylers.genericSuccess('Login successful!')} Welcome ${logStylers.values(userDetails.data.data.name)}`);
         resolveAllBoards(userDetails.data.data);
     } catch (error) {
         const userChoice = await cliServices.tryAgain('Login', error.message);
 
-        if (userChoice.retryLogin) {
+        if (userChoice.retry) {
             startLoginProcess();
         } else {
             logger('Exiting...');
@@ -46,7 +46,7 @@ async function resolveAllBoards(userDetail) {
     const programLogger = getProgramLogger('resolveAllBoards');
 
     try {
-        const boardListFromServer = await apiServiceInstance(userDetail.token).get('/v1/boards');
+        const boardListFromServer = await getApiServiceInstance('v1', userDetail.token).get('/boards');
 
         spinner.stop();
 
@@ -56,7 +56,7 @@ async function resolveAllBoards(userDetail) {
     } catch (error) {
         const userChoice = await cliServices.tryAgain('Boards fetch', error.message);
 
-        if (userChoice.retryLogin) {
+        if (userChoice.retry) {
             resolveAllBoards(userDetail);
         } else {
             logger('Exiting...');
@@ -87,6 +87,8 @@ async function showBoardsList (userDetail, boardListFromServer) {
         } else {
             programLogger(`Fetching failed: Particle devices\n  # ${logStylers.genericError(`Message: ${error.message}`)}`);
         }
+
+        process.exit(1);
     }
 
     const boardList = boardHelpers.prepareBoardList(boardListFromServer, boardListFromCliFormatted);
@@ -143,7 +145,7 @@ async function registerBoard(userDetail, boardList) {
 
     boardProgressBar.start(boardsToRegister.length, 0, {operation: 'Registration'});
     _.forEach(boardsToRegister, async board => {
-        await apiServiceInstance(userDetail.token).post('/v1/boards', {
+        await getApiServiceInstance('v1', userDetail.token).post('/boards', {
             user_id: userDetail.id,
             board_id: board.boardId,
             board_name: board.boardName,
@@ -161,7 +163,7 @@ async function unregisterBoards(userDetail, boardList) {
 
     boardProgressBar.start(boardsToUnregiser.length, 0, {operation: 'Unregistration'});
     _.forEach(boardsToUnregiser, async board => {
-        await apiServiceInstance(userDetail.token).delete(`/v1/boards/${board.id}`);
+        await getApiServiceInstance('v1', userDetail.token).delete(`/boards/${board.id}`);
         boardProgressBar.increment(1);
     });
 }
@@ -174,7 +176,7 @@ async function updateBoardTokens(userDetail, boardList) {
 
     boardProgressBar.start(boardsToUpdateToken.length, 0, {operation: 'Token update'});
     _.forEach(boardsToUpdateToken, async board => {
-        await apiServiceInstance(userDetail.token).put(`/v1/boards/${board.id}`, {
+        await getApiServiceInstance('v1', userDetail.token).put(`/boards/${board.id}`, {
             board_user_token: userToken.boardUserToken,
         });
         boardProgressBar.increment(1);

@@ -69,7 +69,7 @@ const getLoginCredentials = () => {
 const tryAgain = (context, message) => {
     return inquirer.prompt([
         {
-            name: "retryLogin",
+            name: "retry",
             type: "confirm",
             message: `${context} failed. Message: ${message}\n  Would you like to retry?`,
         }

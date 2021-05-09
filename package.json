@@ -6,7 +6,7 @@
   "author": "ShocKwav3_",
   "license": "MIT",
   "scripts": {
-    "deviceManagement": "node main.js"
+    "deviceManagementDev": "NODE_ENV=development node main.js"
   },
   "dependencies": {
     "axios": "^0.20.0",
