@@ -1,2 +1,5 @@
 # Dependency directories
 node_modules/
+
+# tsl certificate and key
+server.cert

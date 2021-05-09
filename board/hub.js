@@ -6,7 +6,7 @@ var { workerLogger } = require('../helpers/logHelpers');
 
 const deviceId = process.argv.slice(2)[0];
 const token = process.argv.slice(2)[1]; //FIXME: encryption needed
-const hubProfile = process.argv.slice(2)[2];(deviceId);
+const hubProfile = process.argv.slice(2)[2];
 const deviceLogger = workerLogger(deviceId);
 
 var board = new five.Board({
@@ -18,12 +18,15 @@ var board = new five.Board({
 });
 
 board.on("ready", function () {
-    deviceLogger("Device Ready!");
+    deviceLogger(`Device ready, running child process (pid: ${process.pid}) under host process (pid: ${process.ppid})`);
     const hubFunctionality = profileMap[hubProfile];
 
-    process.on('message', function(message) {
+    /*process.on('message', function(message) {
         hubFunctionality ? hubFunctionality(five, message, deviceLogger) : deviceLogger('No profiles found for: ', hubProfile);
-    });
+    });*/
+
+    var led = new five.Led("D7");
+    led.blink();
 });
 
 //NOTE: for logs
