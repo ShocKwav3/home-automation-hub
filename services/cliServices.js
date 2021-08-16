@@ -1,4 +1,4 @@
-var table = require('cli-table3');
+const table = require('cli-table3');
 const { promisify } = require('util');
 const execute = promisify(require('child_process').exec);
 const inquirer = require('inquirer');

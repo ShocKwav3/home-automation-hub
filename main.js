@@ -113,9 +113,9 @@ async function showBoardsList (userDetail, boardListFromServer) {
         process.exit(1);
     }
 
-    console.log(boardListTable.toString())
+    console.log(boardListTable.toString());
 
-    //showOptionsPicker(userDetail, boardList);
+    showOptionsPicker(userDetail, boardList);
 }
 
 async function showOptionsPicker(userDetail, boardList) {
