@@ -15,7 +15,7 @@ const parseCliData = (stdout, sanitzers = {}) => stdout.split('\n').filter(item 
     })
 });
 
-const runSpinner = (message) => new spinner(message,  ['◜','◠','◝','◞','◡','◟']);
+const getSpinner = (message) => new spinner(message,  ['◜','◠','◝','◞','◡','◟']);
 const getProgressBar = (contextName) => new cliProgress.SingleBar({
     format: '{operation} progress |' + chalk.cyan('{bar}') + `| {percentage}% || {value}/{total} ${contextName}`,
     barCompleteChar: '\u2588',
@@ -76,13 +76,13 @@ const tryAgain = (context, message) => {
     ]);
 }
 
-const optionsPicker = () => {
+const optionsPicker = (options) => {
     return inquirer.prompt([
       {
         name: "option",
         type: "list",
         message: "Select desired action:",
-        choices: ["Register boards", "Unregister boards", "Update token", "Exit"],
+        choices: options,
       },
     ]);
 }
@@ -92,8 +92,15 @@ const boardSelection = (boardList) => {
         {
             name: "selectedboards",
             type: "checkbox",
-            message: "Select the ones you would like to register",
+            message: "Select boards",
             choices: boardList.map(board => board.boardName),
+            validate: function(choices) {
+                if (choices.length === 0) {
+                    return "Please select at-least one!";
+                }
+
+                return true
+            },
         }
     ]);
 }
@@ -118,7 +125,7 @@ const userTokenInput = () => {
 module.exports = {
     getCliData,
     parseCliData,
-    runSpinner,
+    getSpinner,
     getProgressBar,
     initializeTable,
     getLoginCredentials,

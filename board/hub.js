@@ -2,6 +2,7 @@ var five = require("johnny-five");
 var Particle = require("particle-io");
 var profileMap = require('../config/profileMap');
 var { workerLogger } = require('../helpers/logHelpers');
+var Max17043 = require('../helpers/electronicsHelpers/Max17043');
 
 
 const deviceId = process.argv.slice(2)[0];
@@ -25,8 +26,13 @@ board.on("ready", function () {
         hubFunctionality ? hubFunctionality(five, message, deviceLogger) : deviceLogger('No profiles found for: ', hubProfile);
     });*/
 
-    var led = new five.Led("D7");
-    led.blink();
+    /*var led = new five.Led("D7");
+    led.blink();*/
+
+    const BatteryMonitor = new Max17043(this);
+    deviceLogger('SOC: ', BatteryMonitor.readSOC());
+    deviceLogger('Voltage: ', BatteryMonitor.readVoltage());
+
 });
 
 //NOTE: for logs

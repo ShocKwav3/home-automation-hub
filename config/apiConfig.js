@@ -9,10 +9,22 @@ const apiConfig = {
     },
 };
 
+const apiVersions = {
+    v1: 'v1',
+};
+
+const apiEndpoints = {
+    login: '/users/login',
+    boards: '/boards',
+};
+
 function getApiBaseUrl (version, configContext) {
     return `${apiConfig[configContext].baseUrl}:${apiConfig[configContext].port}/api/${version}`;
-}
+};
+
 
 module.exports = {
     getApiBaseUrl,
+    apiVersions,
+    apiEndpoints,
 };

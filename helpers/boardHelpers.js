@@ -25,7 +25,40 @@ const prepareBoardList = (boardListFromServer, boardListFromCliFormatted) => boa
     return boardData;
 });
 
+const prepareBoardListTable = (boardList, tableWithHeaders) => {
+    _.forEach(boardList, (board) => {
+        const boardData = {...board};
+        boardData.state = board.state === 'offline' ? chalk.red(board.state) : chalk.green(board.state);
+        boardData.isRegistered = !board.isRegistered ? chalk.red(board.isRegistered) : chalk.green(board.isRegistered);
+
+        tableWithHeaders.push([
+            boardData.boardName,
+            boardData.boardId,
+            boardData.state,
+            boardData.isRegistered,
+        ]);
+    });
+
+    return tableWithHeaders;
+}
+
 const boardsTableHeader = ['Board name', 'Board id', 'State', 'Registration status'].map(header => chalk.cyan(header));
+
+const getActionList = (registeredBoard, unregisteredBoards) => {
+    let actionList = [];
+
+    if (unregisteredBoards.length !== 0) {
+        actionList.push('Register boards');
+    }
+
+    if (registeredBoard.length !== 0) {
+        actionList = actionList.concat(['Unregister boards', 'Update token']);
+    }
+
+    actionList.push('Exit');
+
+    return actionList;
+}
 
 
 module.exports = {
@@ -34,4 +67,6 @@ module.exports = {
     formatBoardData,
     prepareBoardList,
     boardsTableHeader,
+    prepareBoardListTable,
+    getActionList,
 }
